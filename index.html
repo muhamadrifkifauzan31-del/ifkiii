@@ -1,101 +1,374 @@
-import requests
-import plotly.graph_objects as go
-import pandas as pd
-from datetime import datetime
-
-# --- GANTI DENGAN DATA ANDA ---
-GITHUB_USERNAME = "username_github_anda"  # <-- GANTI!
-GITHUB_TOKEN = "token_personal_akses_anda" # <-- GANTI!
-# -----------------------------
-
-def fetch_github_activity(username, token):
-    """
-    Mengambil data aktivitas publik dari pengguna GitHub menggunakan API.
-    """
-    print(f"Mengambil data untuk {username}...")
-    url = f"https://api.github.com/users/{username}/events"
-    headers = {
-        "Authorization": f"token {token}"
-    }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Luar Angkasa Saya</title>
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Akan error jika status bukan 200
-        print("Data berhasil diambil!")
-        return response.json()
-    except requests.exceptions.HTTPError as err:
-        print(f"Error HTTP: {err}")
-        print("Pastikan username dan token Anda benar.")
-        return None
-    except Exception as e:
-        print(f"Terjadi error: {e}")
-        return None
-
-def process_activity_data(events):
-    """
-    Memproses data event mentah menjadi DataFrame yang siap divisualisasikan.
-    Menghitung jumlah event per hari.
-    """
-    if not events:
-        return pd.DataFrame()
-
-    activity_counts = {}
-    for event in events:
-        # Ambil tanggal dari created_at
-        date_str = event['created_at'][:10] # Format 'YYYY-MM-DD'
-        if date_str in activity_counts:
-            activity_counts[date_str] += 1
-        else:
-            activity_counts[date_str] = 1
-
-    # Ubah dictionary menjadi DataFrame
-    df = pd.DataFrame(list(activity_counts.items()), columns=['date', 'count'])
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values('date')
+    <!-- Google Fonts: Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     
-    return df
+    <style>
+        /* --- Gaya Umum & Variabel --- */
+        :root {
+            --bg-color: #0a0e27;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-color: #e0e0e0;
+            --accent-color: #00ffff;
+            --secondary-color: #ff00ff;
+            --font-primary: 'Orbitron', sans-serif;
+        }
 
-def visualize_activity(df, username):
-    """
-    Membuat visualisasi interaktif menggunakan Plotly.
-    """
-    if df.empty:
-        print("Tidak ada data untuk divisualisasikan.")
-        return
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    # Buat grafik batang (bar chart)
-    fig = go.Figure(data=[
-        go.Bar(
-            x=df['date'], 
-            y=df['count'],
-            marker_color='skyblue', # Warna batang
-            hovertemplate='<b>Tanggal</b>: %{x|%d %b %Y}<br><b>Jumlah Aktivitas</b>: %{y}<extra></extra>'
-            # Template yang muncul saat hover
-        )
-    ])
+        html {
+            scroll-behavior: smooth;
+        }
 
-    # Ubah tampilan layout
-    fig.update_layout(
-        title=f'Visualisasi Aktivitas GitHub untuk @{username}',
-        xaxis_title='Tanggal',
-        yaxis_title='Jumlah Aktivitas',
-        template='plotly_dark', # Tema gelap yang keren
-        hovermode='x unified' # Hover di satu sumbu x
-    )
-    
-    # Tampilkan grafik di browser
-    fig.show()
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden; /* Mencegah scroll horizontal */
+        }
 
-# --- Program Utama ---
-if __name__ == "__main__":
-    if GITHUB_USERNAME == "username_github_anda" or GITHUB_TOKEN == "token_personal_akses_anda":
-        print("!!! PERINGATAN: Silakan ganti GITHUB_USERNAME dan GITHUB_TOKEN di dalam kode !!!")
-    else:
-        # 1. Ambil data dari GitHub
-        user_events = fetch_github_activity(GITHUB_USERNAME, GITHUB_TOKEN)
+        /* --- Latar Belakang Animasi Bintang --- */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Agar tidak mengganggu klik */
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
         
-        # 2. Proses data
-        activity_df = process_activity_data(user_events)
+        /* --- Wrapper Konten Utama --- */
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- Bagian Header / Profil --- */
+        header {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+        }
+
+        /* --- Gaya Umum untuk Setiap Section --- */
+        section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- Section Tentang Saya --- */
+        #about p {
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+
+        /* --- Section Keahlian --- */
+        .skills-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .skills-list li {
+            background: linear-gradient(45deg, #1a1a3e, #2a2a5e);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            border: 1px solid var(--accent-color);
+            font-size: 0.9rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
         
-        # 3. Visualisasikan
-        visualize_activity(activity_df, GITHUB_USERNAME)
+        .skills-list li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        /* --- Section Proyek --- */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .project-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card p {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-card a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .project-card a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Section Kontak --- */
+        #contact form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #contact input, #contact textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text-color);
+            font-family: var(--font-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        #contact input:focus, #contact textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .btn-submit {
+            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
+            color: var(--bg-color);
+            font-weight: 700;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.5);
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Kontainer untuk bintang-bintang yang akan dibuat oleh JavaScript -->
+    <div class="stars-container" id="starsContainer"></div>
+
+    <div class="content-wrapper">
+
+        <!-- =================== HEADER / PROFIL =================== -->
+        <header>
+            <!-- Ganti 'foto-anda.jpg' dengan URL foto profil Anda -->
+            <img src="https://i.pravatar.cc/150?img=5" alt="Foto Profil" class="profile-img">
+            <h1>Nama Anda</h1>
+            <p>Astronot Digital | Eksplorator Web</p>
+        </header>
+
+        <main>
+            <!-- =================== TENTANG SAYA =================== -->
+            <section id="about">
+                <h2>Briefing Misi</h2>
+                <p>
+                    Halo! Saya seorang astronot digital yang menjelajahi alam semesta maya. Misi saya adalah untuk merancang dan membangun pengalaman web yang luar biasa, menjelajahi teknologi-teknologi baru, dan menemukan solusi kreatif untuk setiap tantangan. Dari merancang antarmuka yang intuitif hingga membangun arsitektur backend yang kokoh, saya siap untuk meluncur ke proyek berikutnya. Bergabunglah dengan saya dalam petualangan ini!
+                </p>
+            </section>
+
+            <!-- =================== KEAHLIAN =================== -->
+            <section id="skills">
+                <h2>Perlengkapan Misi</h2>
+                <ul class="skills-list">
+                    <li>HTML5</li>
+                    <li>CSS3 & SASS</li>
+                    <li>JavaScript (ES6+)</li>
+                    <li>React.js</li>
+                    <li>Node.js</li>
+                    <li>UI/UX Design</li>
+                    <li>Git & GitHub</li>
+                    <li>Figma</li>
+                </ul>
+            </section>
+
+            <!-- =================== PROYEK =================== -->
+            <section id="projects">
+                <h2>Ekspedisi Galaksi</h2>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <h3>Planet E-Commerce</h3>
+                        <p>Toko online modern dengan fitur keranjang belanja yang interaktif dan sistem pembayaran yang aman.</p>
+                        <a href="#">Lihat Proyek →</a>
+                    </div>
+                    <div class="project-card">
+                        <h3>Stasiun Ruang Angkasa Dashboard</h3>
+                        <p>Dashboard analitik real-time untuk memantau data lalu lintas dan performa situs web.</p>
+                        <a href="#">Lihat Proyek →</a>
+                    </div>
+                    <div class="project-card">
+                        <h3>Aplikasi Peta Bintang</h3>
+                        <p>Aplikasi web interaktif untuk memetakan dan belajar tentang berbagai konstelasi bintang.</p>
+                        <a href="#">Lihat Proyek →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================== KONTAK =================== -->
+            <section id="contact">
+                <h2>Hubungi Stasiun Bumi</h2>
+                <form>
+                    <input type="text" id="name" name="name" placeholder="Nama Anda" required>
+                    <input type="email" id="email" name="email" placeholder="Email Anda" required>
+                    <textarea id="message" name="message" rows="5" placeholder="Pesan Anda..." required></textarea>
+                    <button type="submit" class="btn-submit">Kirim Sinyal</button>
+                </form>
+            </section>
+        </main>
+
+        <!-- =================== FOOTER =================== -->
+        <footer>
+            <p>&copy; 2023 Nama Anda. Diluncurkan dari Planet Bumi dengan ❤️</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- JavaScript untuk Membuat Animasi Bintang ---
+
+        // Fungsi untuk membuat bintang secara acak
+        function createStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            const numberOfStars = 200; // Jumlah bintang yang diinginkan
+
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // Posisi acak
+                const leftPosition = Math.random() * 100;
+                const topPosition = Math.random() * 100;
+
+                // Ukuran acak
+                const size = Math.random() * 3; // Ukuran bintang 0-3px
+
+                // Delay animasi acak agar kelap-kelipnya tidak serempak
+                const animationDelay = Math.random() * 3;
+
+                star.style.left = `${leftPosition}%`;
+                star.style.top = `${topPosition}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDelay = `${animationDelay}s`;
+
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Jalankan fungsi createStars saat halaman dimuat
+        window.addEventListener('DOMContentLoaded', createStars);
+
+        // --- Opsi: Script sederhana untuk form kontak ---
+        // Ini hanya alert, Anda perlu backend untuk mengirim email
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah form reload halaman
+            alert('Terima kasih! Sinyal Anda telah diterima. (Fitur ini hanya contoh, memerlukan backend untuk berfungsi penuh).');
+        });
+
+    </script>
+
+</body>
+</html>
