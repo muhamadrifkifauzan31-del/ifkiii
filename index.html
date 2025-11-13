@@ -1,80 +1,66 @@
-# Program Eksplorasi Angkasa: Planet & Fenomena Luar Angkasa
+import turtle
+import math
+import time
 
-class Planet:
-    def __init__(self, name, description, special_fact):
-        self.name = name
-        self.description = description
-        self.special_fact = special_fact
+# --- SETUP LAYAR ---
+screen = turtle.Screen()
+screen.setup(width=800, height=600)
+screen.bgcolor("black")
+screen.title("Simulasi Angkasa")
+screen.tracer(0) # Matikan animasi otomatis untuk kontrol yang lebih halus
 
-    def info(self):
-        return f"Planet {self.name}: {self.description}\nFakta Unik: {self.special_fact}\n"
+# --- FUNGSI UNTUK MEMBUAT OBJEK LANGIT ---
+def create_celestial_body(name, shape, color, size, x, y):
+    body = turtle.Turtle()
+    body.speed(0)
+    body.shape(shape)
+    body.color(color)
+    body.shapesize(size)
+    body.penup()
+    body.goto(x, y)
+    body.pendown()
+    return body
 
-# Daftar planet di tata surya  
-planets = [
-    Planet(
-        "Merkurius",
-        "Planet terdekat dari Matahari, kecil dan berbatu.",
-        "Tidak memiliki atmosfer yang melindungi permukaan dari radiasi Matahari."
-    ),
-    Planet(
-        "Venus",
-        "Planet tercerah di langit malam setelah Bulan. Suhunya sangat panas karena efek rumah kaca ekstrem.",
-        "Rotasi Venus berlawanan arah dengan planet lainnya."
-    ),
-    Planet(
-        "Bumi",
-        "Satu-satunya planet yang diketahui memiliki kehidupan dan lautan air.",
-        "Letaknya sangat ideal, tidak terlalu dekat maupun jauh dari Matahari."
-    ),
-    Planet(
-        "Mars",
-        "Dikenal sebagai Planet Merah, permukaannya dipenuhi oleh besi oksida.",
-        "Mars memiliki gunung tertinggi di tata surya: Olympus Mons."
-    ),
-    Planet(
-        "Jupiter",
-        "Planet terbesar, gas raksasa dengan Bintik Merah Besar, badai masif yang telah berlangsung selama ratusan tahun.",
-        "Memiliki lebih dari 79 bulan, termasuk Ganymede, bulan terbesar di tata surya."
-    ),
-    Planet(
-        "Saturnus",
-        "Dikenal karena cincin spektakulernya yang terdiri dari es dan debu.",
-        "Cincin Saturnus bisa dilihat dari Bumi dengan teleskop sederhana."
-    ),
-    Planet(
-        "Uranus",
-        "Planet gas berwarna biru kehijauan, dan memiliki poros rotasi yang unik hampir sejajar bidang orbitnya.",
-        "Uranus memiliki atmosfer terdingin di tata surya."
-    ),
-    Planet(
-        "Neptunus",
-        "Planet terjauh dari Matahari, sangat berangin, dan berwarna biru karena hadirnya metana.",
-        "Neptunus memiliki badai tercepat, dengan kecepatan angin mencapai 2.100 km/jam."
-    ),
+# --- BUAT MATAHARI ---
+matahari = create_celestial_body("Matahari", "circle", "yellow", 2, 0, 0)
+
+# --- DATA PLANET (nama, warna, ukuran, jarak dari matahari, kecepatan orbit) ---
+data_planet = [
+    ("Merkurius", "gray", 0.4, 60, 0.05),
+    ("Venus", "orange", 0.7, 90, 0.04),
+    ("Bumi", "blue", 0.8, 120, 0.03),
+    ("Mars", "red", 0.6, 150, 0.025),
+    ("Jupiter", "brown", 1.5, 220, 0.015),
 ]
 
-# Penjelasan fenomena kosmik: Lubang Hitam & Lubang Putih
-def cosmic_phenomena():
-    black_hole = """
-Lubang Hitam:
-Fenomena paling misterius di alam semesta, terbentuk dari kematian bintang masif dan memiliki gaya gravitasi super kuat sehingga bahkan cahaya pun tidak dapat lolos darinya.
-Lubang hitam membuktikan betapa luar biasanya alam semesta, di mana ruang dan waktu melengkung dengan ekstrem.
+# --- BUAT PLANET-P LANJUTAN ---
+planets = []
+for name, color, size, distance, speed in data_planet:
+    # Buat planetnya
+    planet = create_celestial_body(name, "circle", color, size, distance, 0)
+    # Simpan data planet dalam dictionary
+    planets.append({
+        "turtle": planet,
+        "distance": distance,
+        "speed": speed,
+        "angle": 0
+    })
 
-Lubang Putih:
-Kebalikan dari lubang hitam, lubang putih adalah teori tentang "pintu keluar" di mana materi dan energi dilepaskan, bukannya ditarik masuk.
-Walaupun masih berupa hipotesis di dunia fisika, lubang putih membuka cakrawala baru tentang simetri misterius alam semesta.
-"""
-    return black_hole
+# --- BUAT LUBANG HITAM ---
+lubang_hitam = create_celestial_body("Lubang Hitam", "circle", "black", 2, -250, -150)
+lubang_hitang.pensize(3)
+lubang_hitang.pencolor("darkgray") # Event horizon
 
-# Eksekusi program
-print("===== Eksplorasi Angkasa: Planet & Fenomena Kosmik =====\n")
-for planet in planets:
-    print(planet.info())
-print(cosmic_phenomena())
+# --- BUAT LUBANG PUTIH ---
+lubang_putih = create_celestial_body("Lubang Putih", "circle", "white", 2, 250, 150)
+lubang_putih.pensize(3)
+lubang_putih.pencolor("cyan") # Efek "memancar"
 
-# Kata-kata motivasi penutup
-print("""
-"Alam semesta adalah perpustakaan tak terbatas, di mana setiap planet adalah buku penuh kisah tanpa akhir.
-Lubang hitam dan lubang putih menjadi bab paling misterius, membuktikan bahwa pengetahuan manusia baru berada di halaman muka dari novel kosmik yang masih panjang.
-Mari jadikan rasa ingin tahu sebagai mesin roket yang membawa kita terus menjelajah angkasa, sebab siapa tahu, di antara bintang-bintang, kita menemukan kunci dari filosofi kehidupan itu sendiri."
-""")
+# --- TULISAN JUDUL ---
+pen = turtle.Turtle()
+pen.hideturtle()
+pen.speed(0)
+pen.color("white")
+pen.penup()
+pen.goto(0, 260)
+pen.write("Simulasi Tata S
