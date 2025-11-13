@@ -1,66 +1,101 @@
-import turtle
-import math
-import time
+import requests
+import plotly.graph_objects as go
+import pandas as pd
+from datetime import datetime
 
-# --- SETUP LAYAR ---
-screen = turtle.Screen()
-screen.setup(width=800, height=600)
-screen.bgcolor("black")
-screen.title("Simulasi Angkasa")
-screen.tracer(0) # Matikan animasi otomatis untuk kontrol yang lebih halus
+# --- GANTI DENGAN DATA ANDA ---
+GITHUB_USERNAME = "username_github_anda"  # <-- GANTI!
+GITHUB_TOKEN = "token_personal_akses_anda" # <-- GANTI!
+# -----------------------------
 
-# --- FUNGSI UNTUK MEMBUAT OBJEK LANGIT ---
-def create_celestial_body(name, shape, color, size, x, y):
-    body = turtle.Turtle()
-    body.speed(0)
-    body.shape(shape)
-    body.color(color)
-    body.shapesize(size)
-    body.penup()
-    body.goto(x, y)
-    body.pendown()
-    return body
+def fetch_github_activity(username, token):
+    """
+    Mengambil data aktivitas publik dari pengguna GitHub menggunakan API.
+    """
+    print(f"Mengambil data untuk {username}...")
+    url = f"https://api.github.com/users/{username}/events"
+    headers = {
+        "Authorization": f"token {token}"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Akan error jika status bukan 200
+        print("Data berhasil diambil!")
+        return response.json()
+    except requests.exceptions.HTTPError as err:
+        print(f"Error HTTP: {err}")
+        print("Pastikan username dan token Anda benar.")
+        return None
+    except Exception as e:
+        print(f"Terjadi error: {e}")
+        return None
 
-# --- BUAT MATAHARI ---
-matahari = create_celestial_body("Matahari", "circle", "yellow", 2, 0, 0)
+def process_activity_data(events):
+    """
+    Memproses data event mentah menjadi DataFrame yang siap divisualisasikan.
+    Menghitung jumlah event per hari.
+    """
+    if not events:
+        return pd.DataFrame()
 
-# --- DATA PLANET (nama, warna, ukuran, jarak dari matahari, kecepatan orbit) ---
-data_planet = [
-    ("Merkurius", "gray", 0.4, 60, 0.05),
-    ("Venus", "orange", 0.7, 90, 0.04),
-    ("Bumi", "blue", 0.8, 120, 0.03),
-    ("Mars", "red", 0.6, 150, 0.025),
-    ("Jupiter", "brown", 1.5, 220, 0.015),
-]
+    activity_counts = {}
+    for event in events:
+        # Ambil tanggal dari created_at
+        date_str = event['created_at'][:10] # Format 'YYYY-MM-DD'
+        if date_str in activity_counts:
+            activity_counts[date_str] += 1
+        else:
+            activity_counts[date_str] = 1
 
-# --- BUAT PLANET-P LANJUTAN ---
-planets = []
-for name, color, size, distance, speed in data_planet:
-    # Buat planetnya
-    planet = create_celestial_body(name, "circle", color, size, distance, 0)
-    # Simpan data planet dalam dictionary
-    planets.append({
-        "turtle": planet,
-        "distance": distance,
-        "speed": speed,
-        "angle": 0
-    })
+    # Ubah dictionary menjadi DataFrame
+    df = pd.DataFrame(list(activity_counts.items()), columns=['date', 'count'])
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+    
+    return df
 
-# --- BUAT LUBANG HITAM ---
-lubang_hitam = create_celestial_body("Lubang Hitam", "circle", "black", 2, -250, -150)
-lubang_hitang.pensize(3)
-lubang_hitang.pencolor("darkgray") # Event horizon
+def visualize_activity(df, username):
+    """
+    Membuat visualisasi interaktif menggunakan Plotly.
+    """
+    if df.empty:
+        print("Tidak ada data untuk divisualisasikan.")
+        return
 
-# --- BUAT LUBANG PUTIH ---
-lubang_putih = create_celestial_body("Lubang Putih", "circle", "white", 2, 250, 150)
-lubang_putih.pensize(3)
-lubang_putih.pencolor("cyan") # Efek "memancar"
+    # Buat grafik batang (bar chart)
+    fig = go.Figure(data=[
+        go.Bar(
+            x=df['date'], 
+            y=df['count'],
+            marker_color='skyblue', # Warna batang
+            hovertemplate='<b>Tanggal</b>: %{x|%d %b %Y}<br><b>Jumlah Aktivitas</b>: %{y}<extra></extra>'
+            # Template yang muncul saat hover
+        )
+    ])
 
-# --- TULISAN JUDUL ---
-pen = turtle.Turtle()
-pen.hideturtle()
-pen.speed(0)
-pen.color("white")
-pen.penup()
-pen.goto(0, 260)
-pen.write("Simulasi Tata S
+    # Ubah tampilan layout
+    fig.update_layout(
+        title=f'Visualisasi Aktivitas GitHub untuk @{username}',
+        xaxis_title='Tanggal',
+        yaxis_title='Jumlah Aktivitas',
+        template='plotly_dark', # Tema gelap yang keren
+        hovermode='x unified' # Hover di satu sumbu x
+    )
+    
+    # Tampilkan grafik di browser
+    fig.show()
+
+# --- Program Utama ---
+if __name__ == "__main__":
+    if GITHUB_USERNAME == "username_github_anda" or GITHUB_TOKEN == "token_personal_akses_anda":
+        print("!!! PERINGATAN: Silakan ganti GITHUB_USERNAME dan GITHUB_TOKEN di dalam kode !!!")
+    else:
+        # 1. Ambil data dari GitHub
+        user_events = fetch_github_activity(GITHUB_USERNAME, GITHUB_TOKEN)
+        
+        # 2. Proses data
+        activity_df = process_activity_data(user_events)
+        
+        # 3. Visualisasikan
+        visualize_activity(activity_df, GITHUB_USERNAME)
